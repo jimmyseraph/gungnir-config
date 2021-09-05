@@ -1,0 +1,45 @@
+server:
+  port: 20000
+
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: user_service_route
+        uri: lb://user:10003
+        predicates:
+        - Path=/api/user/**
+        filters:
+        - RewritePath=/api(?<segment>/?.*), $\{segment}
+
+      - id: cover_service_route
+        uri: lb://cover:10004
+        predicates:
+        - Path=/api/project/**
+        filters:
+        - NeedSignIn=true
+        - RewritePath=/api(?<segment>/?.*), $\{segment}
+
+  jackson:
+    default-property-inclusion: non_null
+
+feign:
+  hystrix:
+    default:
+      execution:
+        isolation:
+          thread:
+            timeoutInMilliseconds: 5000
+    enabled: true
+
+eureka:
+  instance:
+    prefer-ip-address: true
+    lease-renewal-interval-in-seconds: 5
+    lease-expiration-duration-in-seconds: 10
+  client:
+    healthcheck:
+      enabled: true
+    registry-fetch-interval-seconds: 5
+    serviceUrl:
+      defaultZone: http://icoffee_discovery_local:local123@127.0.0.1:10002/eureka/
